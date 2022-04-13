@@ -6,19 +6,40 @@
 
 import argparse
 import numpy as np 
-import enum
+from enum import IntEnum
 import matplotlib.pyplot as plt
-from matplotlib import animation
+import matplotlib.animation as animation
 
-class State(enum.IntEnum):
+class State(IntEnum):
     on = 255
     off = 0
-def random_data(length, seed) -> np.array:
+def random_data(length = 4, seed = 420) -> np.array:
     '''
     生成一个大小为length的二维棋盘
     '''
     np.random.seed(seed)
     return np.random.choice([State.off, State.on], size=(length, length), p=[0.5, 0.5])
+
+def add_bread(i, j, grid):
+    bread = np.array([[0, 255, 0, 255],
+                      [0, 0, 255, 255],
+                      [0, 255, 0, 255],
+                      [0, 255, 255, 0]])
+    grid[i:i + 4, j:j + 4] = bread
+
+def add_block(i, j, grid):
+    block = np.array([[255, 255], [255, 255]])
+    grid[i:i + 2, j:j + 2] = block
+
+def add_glider(i, j, grid):
+    glider = np.array([[0, 0, 255],
+                       [255, 0, 255],
+                       [0, 255, 255]])
+    grid[i:i + 3, j:j + 3] = glider
+
+def add_gosper_glider_gun(i, j, grid):
+    gun = np.load('gosper.npy')
+    grid[i:i + 11, j:j + 38] = gun
 
 def _count(data, row, col):
     shape = data.shape[0]
@@ -40,7 +61,7 @@ def count(initial, data, row, col):
         if total == 3:
             data[row, col] = State.on
 
-def update(data, save_name = './test.html'):
+def update(data, save_name):
     update_interval = 50
     fig, ax = plt.subplots()
     ax.set_xticks([])
@@ -68,5 +89,43 @@ def generate(frame_num, img, plt, initial):
     img.set_data(data)
     initial[:] = data[:]
     return img
+
+def parse_args():
+    parser = argparse.ArgumentParser(usage='生命游戏')
+    parser.add_argument('--size', type=int, help='棋盘大小', required=False)
+    parser.add_argument('--seed', type=int, help='随机种子', required=False)
+    parser.add_argument('--glider', action='store_true', help='滑翔机', required=False)
+    parser.add_argument('--gosper', action='store_true', help='高斯帕滑翔机枪', required=False)
+    parser.add_argument('--save', help='文件名', required=False)
+    return parser.parse_args()
+
+def initial_data(length, seed, *, pattern=None):
+    data = random_data(length, seed)
+    if pattern == 'glider':
+        data = np.zeros((length, length))
+        add_glider(3, 3, data)
+    elif pattern == 'gosper':
+        data = np.zeros((length, length))
+        add_gosper_glider_gun(20, 20, data)
+    return data
+
+def main():
+    args = parse_args()
+    length = args.size
+    seed = args.seed
+    glider = args.glider
+    gosper = args.gosper
+    save = args.save
+    pattern = None
+    if glider:
+        pattern = 'glider'
+    if gosper:
+        pattern = 'gosper'
+    data = initial_data(length or 50, seed or 400, pattern=pattern)
+    update(data, save)
+
+if __name__ == "__main__":
+    main()
+
 
 
