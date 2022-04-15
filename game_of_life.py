@@ -28,7 +28,8 @@ def add_bread(i, j, grid):
     grid[i:i + 4, j:j + 4] = bread
 
 def add_block(i, j, grid):
-    block = np.array([[255, 255], [255, 255]])
+    block = np.array([[255, 255],
+                     [255, 255]])
     grid[i:i + 2, j:j + 2] = block
 
 def add_glider(i, j, grid):
