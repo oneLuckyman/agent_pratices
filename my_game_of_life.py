@@ -11,7 +11,7 @@ class cell(object):
     def __init__(self) -> None:
         self.alive = False
         self.position = (0, 0)
-        self.size = 10
+        self.size = 100
     
     def _count(slef):
         pass
