@@ -1,6 +1,9 @@
+import turtle
 import pygame
 import os 
 import sys 
+import time
+import random
 
 os.chdir(sys.path[0])
 
@@ -8,21 +11,30 @@ SCREEN_WIDTH = 700
 SCREEN_HEIGHT = 500
 BG_COLOR = pygame.Color(0, 0, 0)
 TEXT_COLOR = pygame.Color(255, 0, 0)
+TANK_SPEED = 10
 
 class MainGame():
+    ENEMYTANK_NUMS = 5
+
     def __init__(self):
-        pass
+        self.move_keys = 0
+        self.enemy_tank_list = []
 
     def start_game(self):
         pygame.display.init()
         self.window = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
         self.my_tank = Tank(350, 250)
+        self.create_enemy_tank()
         pygame.display.set_caption('Tank Game')
         while True:
+            time.sleep(0.02)
             self.window.fill(BG_COLOR)
             self.get_event()
             self.window.blit(self.Get_Text_Surface('Number of remaining enemies: %d' %6), (10, 10))
+            if not self.my_tank.stop:    
+                self.my_tank.move()
             self.my_tank.display_tank(self.window)
+            self.blit_all_enemy_tank()
             pygame.display.update()
 
     def end_game(self):
@@ -42,21 +54,47 @@ class MainGame():
                 self.end_game()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
+                    self.move_keys += 1
                     self.my_tank.direction = 'L'
-                    self.my_tank.move()
+                    # self.my_tank.move()
+                    self.my_tank.stop = False
                     print('Turn Left!')
                 elif event.key == pygame.K_RIGHT:
+                    self.move_keys += 1
                     self.my_tank.direction = 'R'
-                    self.my_tank.move()
+                    # self.my_tank.move()
+                    self.my_tank.stop = False
                     print('Turn Right!')
                 elif event.key == pygame.K_UP:
+                    self.move_keys += 1
                     self.my_tank.direction = 'U'
-                    self.my_tank.move()
+                    # self.my_tank.move()
+                    self.my_tank.stop = False
                     print('Turn Up!')
                 elif event.key == pygame.K_DOWN:
+                    self.move_keys += 1
                     self.my_tank.direction = 'D'
-                    self.my_tank.move()
+                    # self.my_tank.move()
+                    self.my_tank.stop = False
                     print('Turn Down')
+                elif event.key == pygame.K_SPACE:
+                    print('Fire!')
+            if event.type == pygame.KEYUP:
+                if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+                    self.move_keys -= 1
+                if not self.move_keys:    
+                    self.my_tank.stop = True
+    
+    def create_enemy_tank(self):
+        top = 100
+        for i in range(self.ENEMYTANK_NUMS):
+            left = random.randint(0, 600)
+            speed = random.randint(1, 4)
+            self.enemy_tank_list.append(EnemyTank(left, top, speed))
+    
+    def blit_all_enemy_tank(self):
+        for enemy_tank in self.enemy_tank_list:
+            enemy_tank.display_tank(self.window)
 
 class Tank():
     def __init__(self, left, top) -> None:
@@ -73,7 +111,8 @@ class Tank():
         self.rect = self.image.get_rect()
         self.rect.left = left 
         self.rect.top = top
-        self.speed = 10
+        self.speed = TANK_SPEED
+        self.stop = True
 
 
     def move(self):
@@ -102,8 +141,33 @@ class MyTank(Tank):
         pass
 
 class EnemyTank(Tank):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, left, top, speed) -> None:
+        self.images = {
+            'U':pygame.image.load('img/enemy1_U.png'),
+            'D':pygame.image.load('img/enemy1_D.png'),
+            'L':pygame.image.load('img/enemy1_L.png'),
+            'R':pygame.image.load('img/enemy1_R.png')
+        }
+
+        self.direction = self.random_direction()
+        self.image = self.images[self.direction]
+        self.rect = self.image.get_rect()
+        self.rect.left = left 
+        self.rect.top = top 
+        self.speed = speed 
+        self.stop = True
+    
+    def random_direction(self):
+        num = random.randint(1,4)
+        if num == 1:
+            return 'U'
+        elif num == 2:
+            return 'D'
+        elif num == 3:
+            return 'R'
+        elif num == 4:
+            return 'L'
+
 
 class Bullet():
     def __init__(self) -> None:
