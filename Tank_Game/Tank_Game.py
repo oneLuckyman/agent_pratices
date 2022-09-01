@@ -1,3 +1,4 @@
+from msilib.schema import Directory
 import turtle
 import pygame
 import os 
@@ -30,7 +31,7 @@ class MainGame():
             time.sleep(0.02)
             self.window.fill(BG_COLOR)
             self.get_event()
-            self.window.blit(self.Get_Text_Surface('Number of remaining enemies: %d' %6), (10, 10))
+            self.window.blit(self.Get_Text_Surface('Number of remaining enemies: %d' %len(self.enemy_tank_list)), (10, 10))
             if not self.my_tank.stop:    
                 self.my_tank.move()
             self.my_tank.display_tank(self.window)
@@ -95,6 +96,7 @@ class MainGame():
     def blit_all_enemy_tank(self):
         for enemy_tank in self.enemy_tank_list:
             enemy_tank.display_tank(self.window)
+            enemy_tank.random_move()
 
 class Tank():
     def __init__(self, left, top) -> None:
@@ -118,16 +120,28 @@ class Tank():
     def move(self):
         if self.direction == 'L':
             if self.rect.left > 0:
-                self.rect.left -= self.speed
+                if (self.rect.left - self.speed) < 0:
+                    self.rect.left = 0
+                else:
+                    self.rect.left -= self.speed
         elif self.direction == 'U':
             if self.rect.top > 0:
-                self.rect.top -= self.speed
+                if (self.rect.top - self.speed) < 0:
+                    self.rect.top = 0
+                else:
+                    self.rect.top -= self.speed
         elif self.direction == 'R':
             if self.rect.left < SCREEN_WIDTH - self.height:
-                self.rect.left += self.speed
+                if (self.rect.left + self.speed) > (SCREEN_WIDTH - self.height):
+                    self.rect.left = (SCREEN_WIDTH - self.height)
+                else:
+                    self.rect.left += self.speed
         elif self.direction == 'D':
             if self.rect.top < SCREEN_HEIGHT - self.height:
-                self.rect.top += self.speed
+                if (self.rect.top + self.speed) > (SCREEN_HEIGHT - self.height):
+                    self.rect.top = (SCREEN_HEIGHT - self.height)
+                else:
+                    self.rect.top += self.speed
 
     def shot(self):
         pass
@@ -151,11 +165,14 @@ class EnemyTank(Tank):
 
         self.direction = self.random_direction()
         self.image = self.images[self.direction]
+        self.height = 56
         self.rect = self.image.get_rect()
         self.rect.left = left 
         self.rect.top = top 
         self.speed = speed 
         self.stop = True
+        self.init_steps = 60
+        self.steps = self.init_steps
     
     def random_direction(self):
         num = random.randint(1,4)
@@ -167,17 +184,56 @@ class EnemyTank(Tank):
             return 'R'
         elif num == 4:
             return 'L'
+    
+    def random_move(self):
+        if self.steps <= 0:
+            self.direction = self.random_direction()
+            self.steps = self.init_steps
+        else:
+            self.move()
+            self.steps -= self.speed
 
 
 class Bullet():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, tank: Tank) -> None:
+        self.images = {
+            'U':pygame.image.load('img/Bullet/bullet_up.png'),
+            'D':pygame.image.load('img/Bullet/bullet_down.png'),
+            'L':pygame.image.load('img/Bullet/bullet_left.png'),
+            'R':pygame.image.load('img/Bullet/bullet_right.png')
+        }
+
+        self.direction = tank.direction
+        self.height = 12
+        self.speed = 5
+
+        if self.direction == 'U':
+            self.image = self.images[self.direction]
+            self.rect = self.image.get_rect()
+            self.rect.left = tank.rect.left + ((tank.height - self.height) / 2) + 1
+            self.rect.top = tank.rect.top - self.height
+        elif self.direction == 'D':
+            self.image = self.images[self.direction]
+            self.rect = self.image.get_rect()
+            self.rect.left = tank.rect.left + ((tank.height - self.height) / 2) + 1
+            self.rect.top = tank.rect.top + tank.height
+        elif self.direction == 'R':
+            self.image = self.images[self.direction]
+            self.rect = self.image.get_rect()
+            self.rect.left = tank.rect.left + tank.height
+            self.rect.top = tank.rect.top + ((tank.height - self.height) / 2) + 1
+        elif self.direction == 'L':
+            self.image = self.images[self.direction]
+            self.rect = self.image.get_rect()
+            self.rect.left = tank.rect.left - self.height
+            self.rect.top = tank.rect.top + ((tank.height - self.height) / 2) + 1
+            
 
     def move(self):
         pass
 
-    def display_bullet(self):
-        pass
+    def display_bullet(self, window):
+        window.blit(self.image, self.rect)
 
 class Wall():
     def __init__(self) -> None:
