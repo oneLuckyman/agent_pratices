@@ -20,6 +20,7 @@ class MainGame():
     def __init__(self):
         self.move_keys = 0
         self.enemy_tank_list = []
+        self.my_bullet_list = []
 
     def start_game(self):
         pygame.display.init()
@@ -36,6 +37,7 @@ class MainGame():
                 self.my_tank.move()
             self.my_tank.display_tank(self.window)
             self.blit_all_enemy_tank()
+            self.blit_my_bullet()
             pygame.display.update()
 
     def end_game(self):
@@ -79,6 +81,8 @@ class MainGame():
                     self.my_tank.stop = False
                     print('Turn Down')
                 elif event.key == pygame.K_SPACE:
+                    my_bullet = Bullet(self.my_tank)
+                    self.my_bullet_list.append(my_bullet)
                     print('Fire!')
             if event.type == pygame.KEYUP:
                 if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
@@ -97,6 +101,10 @@ class MainGame():
         for enemy_tank in self.enemy_tank_list:
             enemy_tank.display_tank(self.window)
             enemy_tank.random_move()
+    
+    def blit_my_bullet(self):
+        for my_bullet in self.my_bullet_list:
+            my_bullet.display_bullet(self.window)
 
 class Tank():
     def __init__(self, left, top) -> None:
