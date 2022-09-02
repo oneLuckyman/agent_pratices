@@ -105,6 +105,7 @@ class MainGame():
     def blit_my_bullet(self):
         for my_bullet in self.my_bullet_list:
             my_bullet.display_bullet(self.window)
+            my_bullet.move()
 
 class Tank():
     def __init__(self, left, top) -> None:
@@ -238,7 +239,26 @@ class Bullet():
             
 
     def move(self):
-        pass
+        if self.direction == 'U':
+            if self.rect.top > 0:
+                self.rect.top -= self.speed
+            else:
+                pass
+        if self.direction == 'D':
+            if self.rect.top < (SCREEN_HEIGHT - self.height):
+                self.rect.top += self.speed
+            else:
+                pass
+        if self.direction == 'R':
+            if self.rect.left < (SCREEN_WIDTH - self.height):
+                self.rect.left += self.speed
+            else:
+                pass
+        if self.direction == 'L':
+            if self.rect.left > 0:
+                self.rect.left -= self.speed
+            else:
+                pass
 
     def display_bullet(self, window):
         window.blit(self.image, self.rect)
