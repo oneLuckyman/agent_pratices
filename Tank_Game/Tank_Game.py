@@ -81,9 +81,12 @@ class MainGame():
                     self.my_tank.stop = False
                     print('Turn Down')
                 elif event.key == pygame.K_SPACE:
-                    my_bullet = Bullet(self.my_tank)
-                    self.my_bullet_list.append(my_bullet)
-                    print('Fire!')
+                    if len(self.my_bullet_list) <= 3:
+                        my_bullet = Bullet(self.my_tank)
+                        self.my_bullet_list.append(my_bullet)
+                        print('Fire!')
+                    else:
+                        print('Too many bullets!')
             if event.type == pygame.KEYUP:
                 if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
                     self.move_keys -= 1
@@ -104,8 +107,11 @@ class MainGame():
     
     def blit_my_bullet(self):
         for my_bullet in self.my_bullet_list:
-            my_bullet.display_bullet(self.window)
-            my_bullet.move()
+            if my_bullet.alive:
+                my_bullet.display_bullet(self.window)
+                my_bullet.move()
+            else:
+                self.my_bullet_list.remove(my_bullet)
 
 class Tank():
     def __init__(self, left, top) -> None:
@@ -215,6 +221,7 @@ class Bullet():
         self.direction = tank.direction
         self.height = 12
         self.speed = 5
+        self.alive = True
 
         if self.direction == 'U':
             self.image = self.images[self.direction]
@@ -243,22 +250,22 @@ class Bullet():
             if self.rect.top > 0:
                 self.rect.top -= self.speed
             else:
-                pass
+                self.alive = False
         if self.direction == 'D':
             if self.rect.top < (SCREEN_HEIGHT - self.height):
                 self.rect.top += self.speed
             else:
-                pass
+                self.alive = False
         if self.direction == 'R':
             if self.rect.left < (SCREEN_WIDTH - self.height):
                 self.rect.left += self.speed
             else:
-                pass
+                self.alive = False
         if self.direction == 'L':
             if self.rect.left > 0:
                 self.rect.left -= self.speed
             else:
-                pass
+                self.alive = False
 
     def display_bullet(self, window):
         window.blit(self.image, self.rect)
