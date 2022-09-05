@@ -21,6 +21,7 @@ class MainGame():
         self.move_keys = 0
         self.enemy_tank_list = []
         self.my_bullet_list = []
+        self.enemy_bullet_list = []
 
     def start_game(self):
         pygame.display.init()
@@ -38,6 +39,7 @@ class MainGame():
             self.my_tank.display_tank(self.window)
             self.blit_all_enemy_tank()
             self.blit_my_bullet()
+            self.blit_enemy_bullet()
             pygame.display.update()
 
     def end_game(self):
@@ -104,6 +106,9 @@ class MainGame():
         for enemy_tank in self.enemy_tank_list:
             enemy_tank.display_tank(self.window)
             enemy_tank.random_move()
+            enemy_bullet = enemy_tank.shot()
+            if enemy_bullet:
+                self.enemy_bullet_list.append(enemy_bullet)
     
     def blit_my_bullet(self):
         for my_bullet in self.my_bullet_list:
@@ -112,6 +117,14 @@ class MainGame():
                 my_bullet.move()
             else:
                 self.my_bullet_list.remove(my_bullet)
+    
+    def blit_enemy_bullet(self):
+        for enemy_bullet in self.enemy_bullet_list:
+            if enemy_bullet.alive:
+                enemy_bullet.display_bullet(self.window)
+                enemy_bullet.move()
+            else:
+                self.enemy_bullet_list.remove(enemy_bullet)
 
 class Tank():
     def __init__(self, left, top) -> None:
@@ -159,7 +172,9 @@ class Tank():
                     self.rect.top += self.speed
 
     def shot(self):
-        pass
+        num = random.randint(1, 100)
+        if num < 50:
+            return Bullet(self)
 
     def display_tank(self, window):
         self.image = self.images[self.direction]
