@@ -14,6 +14,10 @@ BG_COLOR = pygame.Color(0, 0, 0)
 TEXT_COLOR = pygame.Color(255, 0, 0)
 TANK_SPEED = 10
 
+class BaseItem(pygame.sprite.Sprite):
+    def __init__(self) -> None:
+        pygame.sprite.Sprite.__init__(self)
+
 class MainGame():
     ENEMYTANK_NUMS = 5
 
@@ -104,17 +108,21 @@ class MainGame():
     
     def blit_all_enemy_tank(self):
         for enemy_tank in self.enemy_tank_list:
-            enemy_tank.display_tank(self.window)
-            enemy_tank.random_move()
-            enemy_bullet = enemy_tank.shot()
-            if enemy_bullet:
-                self.enemy_bullet_list.append(enemy_bullet)
+            if enemy_tank.alive:
+                enemy_tank.display_tank(self.window)
+                enemy_tank.random_move()
+                enemy_bullet = enemy_tank.shot()
+                if enemy_bullet:
+                    self.enemy_bullet_list.append(enemy_bullet)
+            else:
+                self.enemy_tank_list.remove(enemy_tank)
     
     def blit_my_bullet(self):
         for my_bullet in self.my_bullet_list:
             if my_bullet.alive:
                 my_bullet.display_bullet(self.window)
                 my_bullet.move()
+                my_bullet.hit_enemy_tank(self.enemy_tank_list)
             else:
                 self.my_bullet_list.remove(my_bullet)
     
@@ -126,7 +134,7 @@ class MainGame():
             else:
                 self.enemy_bullet_list.remove(enemy_bullet)
 
-class Tank():
+class Tank(BaseItem):
     def __init__(self, left, top) -> None:
         self.images={
             'U':pygame.image.load('img/pltankU.png'),
@@ -135,6 +143,7 @@ class Tank():
             'R':pygame.image.load('img/pltankR.png')
         }
 
+        self.alive = True
         self.direction = 'U'
         self.height = 56
         self.image = self.images[self.direction]
@@ -193,6 +202,7 @@ class EnemyTank(Tank):
             'R':pygame.image.load('img/enemy1_R.png')
         }
 
+        self.alive = True
         self.direction = self.random_direction()
         self.image = self.images[self.direction]
         self.height = 56
@@ -224,7 +234,7 @@ class EnemyTank(Tank):
             self.steps -= self.speed
 
 
-class Bullet():
+class Bullet(BaseItem):
     def __init__(self, tank: Tank) -> None:
         self.images = {
             'U':pygame.image.load('img/Bullet/bullet_up.png'),
@@ -284,6 +294,12 @@ class Bullet():
 
     def display_bullet(self, window):
         window.blit(self.image, self.rect)
+    
+    def hit_enemy_tank(self, enemy_tank_list):
+        for enemy_tank in enemy_tank_list:
+            if pygame.sprite.collide_rect(self, enemy_tank):
+                enemy_tank.alive = False
+                self.alive = False
 
 class Wall():
     def __init__(self) -> None:
