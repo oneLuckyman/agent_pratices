@@ -1,4 +1,3 @@
-from msilib.schema import Directory
 import turtle
 import pygame
 import os 
@@ -20,6 +19,7 @@ class BaseItem(pygame.sprite.Sprite):
 
 class MainGame():
     ENEMYTANK_NUMS = 5
+    explode_list = []
 
     def __init__(self):
         self.move_keys = 0
@@ -44,6 +44,7 @@ class MainGame():
             self.blit_all_enemy_tank()
             self.blit_my_bullet()
             self.blit_enemy_bullet()
+            self.blit_explode()
             pygame.display.update()
 
     def end_game(self):
@@ -122,7 +123,7 @@ class MainGame():
             if my_bullet.alive:
                 my_bullet.display_bullet(self.window)
                 my_bullet.move()
-                my_bullet.hit_enemy_tank(self.enemy_tank_list)
+                my_bullet.hit_enemy_tank(self.enemy_tank_list, self.window)
             else:
                 self.my_bullet_list.remove(my_bullet)
     
@@ -133,6 +134,13 @@ class MainGame():
                 enemy_bullet.move()
             else:
                 self.enemy_bullet_list.remove(enemy_bullet)
+    
+    def blit_explode(self):
+        for explode in self.explode_list:
+            if explode.alive:
+                explode.display_explode()
+            else:
+                self.explode_list.remove(explode)
 
 class Tank(BaseItem):
     def __init__(self, left, top) -> None:
@@ -295,11 +303,13 @@ class Bullet(BaseItem):
     def display_bullet(self, window):
         window.blit(self.image, self.rect)
     
-    def hit_enemy_tank(self, enemy_tank_list):
+    def hit_enemy_tank(self, enemy_tank_list, window):
         for enemy_tank in enemy_tank_list:
             if pygame.sprite.collide_rect(self, enemy_tank):
                 enemy_tank.alive = False
                 self.alive = False
+                MainGame.explode_list.append(Explode(enemy_tank, window))
+
 
 class Wall():
     def __init__(self) -> None:
@@ -309,11 +319,27 @@ class Wall():
         pass
 
 class Explode():
-    def __init__(self):
-        pass
+    def __init__(self, tank, window):
+        self.window = window
+        self.rect = tank.rect
+        self.rect.left += 4 # (56 - 48)/2 
+        self.rect.top += 4
+        self.step = 0
+        self.images = [
+            pygame.image.load('img/boom_static.png'),
+            pygame.image.load('img/boom_static.png')
+        ]
+        self.alive = True 
 
     def display_explode(self):
-        pass
+        if self.step < len(self.images):
+            self.image = self.images[self.step]
+            self.step += 1
+            self.window.blit(self.image, self.rect)
+        else:
+            self.alive = False 
+            self.step = 0
+
 
 class Music():
     def __init__(self) -> None:
