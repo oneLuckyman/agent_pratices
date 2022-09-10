@@ -36,16 +36,21 @@ class MainGame():
         while True:
             time.sleep(0.02)
             self.window.fill(BG_COLOR)
-            self.get_event()
             self.window.blit(self.Get_Text_Surface('Number of remaining enemies: %d' %len(self.enemy_tank_list)), (10, 10))
+            if self.my_tank.alive:
+                self.my_tank.display_tank(self.window)
+            else:
+                break
+            self.get_event()
             if not self.my_tank.stop:    
                 self.my_tank.move()
-            self.my_tank.display_tank(self.window)
             self.blit_all_enemy_tank()
             self.blit_my_bullet()
             self.blit_enemy_bullet()
             self.blit_explode()
             pygame.display.update()
+        
+        print('Game Over!!!')
 
     def end_game(self):
         print('Good Bye!')
@@ -132,6 +137,7 @@ class MainGame():
             if enemy_bullet.alive:
                 enemy_bullet.display_bullet(self.window)
                 enemy_bullet.move()
+                enemy_bullet.hit_my_tank(self.my_tank, self.window)
             else:
                 self.enemy_bullet_list.remove(enemy_bullet)
     
@@ -309,6 +315,13 @@ class Bullet(BaseItem):
                 enemy_tank.alive = False
                 self.alive = False
                 MainGame.explode_list.append(Explode(enemy_tank, window))
+    
+    def hit_my_tank(self, my_tank, window):
+        if pygame.sprite.collide_rect(self, my_tank):
+            if pygame.sprite.collide_rect(self, my_tank):
+                my_tank.alive = False
+                self.alive = False
+                MainGame.explode_list.append(Explode(my_tank, window))
 
 
 class Wall():
