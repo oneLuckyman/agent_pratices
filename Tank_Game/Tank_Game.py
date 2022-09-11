@@ -30,20 +30,22 @@ class MainGame():
     def start_game(self):
         pygame.display.init()
         self.window = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
-        self.my_tank = Tank(350, 250)
+        self.create_my_tank()
         self.create_enemy_tank()
         pygame.display.set_caption('Tank Game')
         while True:
             time.sleep(0.02)
             self.window.fill(BG_COLOR)
             self.window.blit(self.Get_Text_Surface('Number of remaining enemies: %d' %len(self.enemy_tank_list)), (10, 10))
-            if self.my_tank.alive:
+            if self.my_tank and self.my_tank.alive:
                 self.my_tank.display_tank(self.window)
             else:
-                break
+                del self.my_tank
+                self.my_tank = None 
             self.get_event()
-            if not self.my_tank.stop:    
-                self.my_tank.move()
+            if self.my_tank and self.my_tank.alive:
+                if not self.my_tank.stop:    
+                    self.my_tank.move()
             self.blit_all_enemy_tank()
             self.blit_my_bullet()
             self.blit_enemy_bullet()
@@ -67,44 +69,52 @@ class MainGame():
         for event in self.event_list:
             if event.type == pygame.QUIT:
                 self.end_game()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    self.move_keys += 1
-                    self.my_tank.direction = 'L'
-                    # self.my_tank.move()
-                    self.my_tank.stop = False
-                    print('Turn Left!')
-                elif event.key == pygame.K_RIGHT:
-                    self.move_keys += 1
-                    self.my_tank.direction = 'R'
-                    # self.my_tank.move()
-                    self.my_tank.stop = False
-                    print('Turn Right!')
-                elif event.key == pygame.K_UP:
-                    self.move_keys += 1
-                    self.my_tank.direction = 'U'
-                    # self.my_tank.move()
-                    self.my_tank.stop = False
-                    print('Turn Up!')
-                elif event.key == pygame.K_DOWN:
-                    self.move_keys += 1
-                    self.my_tank.direction = 'D'
-                    # self.my_tank.move()
-                    self.my_tank.stop = False
-                    print('Turn Down')
-                elif event.key == pygame.K_SPACE:
-                    if len(self.my_bullet_list) <= 3:
-                        my_bullet = Bullet(self.my_tank)
-                        self.my_bullet_list.append(my_bullet)
-                        print('Fire!')
-                    else:
-                        print('Too many bullets!')
-            if event.type == pygame.KEYUP:
-                if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
-                    self.move_keys -= 1
-                if not self.move_keys:    
-                    self.my_tank.stop = True
+            if not self.my_tank or not self.my_tank.alive:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.create_my_tank()
+            if self.my_tank and self.my_tank.alive:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        self.move_keys += 1
+                        self.my_tank.direction = 'L'
+                        # self.my_tank.move()
+                        self.my_tank.stop = False
+                        print('Turn Left!')
+                    elif event.key == pygame.K_RIGHT:
+                        self.move_keys += 1
+                        self.my_tank.direction = 'R'
+                        # self.my_tank.move()
+                        self.my_tank.stop = False
+                        print('Turn Right!')
+                    elif event.key == pygame.K_UP:
+                        self.move_keys += 1
+                        self.my_tank.direction = 'U'
+                        # self.my_tank.move()
+                        self.my_tank.stop = False
+                        print('Turn Up!')
+                    elif event.key == pygame.K_DOWN:
+                        self.move_keys += 1
+                        self.my_tank.direction = 'D'
+                        # self.my_tank.move()
+                        self.my_tank.stop = False
+                        print('Turn Down')
+                    elif event.key == pygame.K_SPACE:
+                        if len(self.my_bullet_list) <= 3:
+                            my_bullet = Bullet(self.my_tank)
+                            self.my_bullet_list.append(my_bullet)
+                            print('Fire!')
+                        else:
+                            print('Too many bullets!')
+                if event.type == pygame.KEYUP:
+                    if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
+                        self.move_keys -= 1
+                    if not self.move_keys:    
+                        self.my_tank.stop = True
     
+    def create_my_tank(self):
+        self.my_tank = Tank(350, 250)
+
     def create_enemy_tank(self):
         top = 100
         for i in range(self.ENEMYTANK_NUMS):
@@ -317,11 +327,12 @@ class Bullet(BaseItem):
                 MainGame.explode_list.append(Explode(enemy_tank, window))
     
     def hit_my_tank(self, my_tank, window):
-        if pygame.sprite.collide_rect(self, my_tank):
+        if my_tank and my_tank.alive:
             if pygame.sprite.collide_rect(self, my_tank):
-                my_tank.alive = False
-                self.alive = False
-                MainGame.explode_list.append(Explode(my_tank, window))
+                if pygame.sprite.collide_rect(self, my_tank):
+                    my_tank.alive = False
+                    self.alive = False
+                    MainGame.explode_list.append(Explode(my_tank, window))
 
 
 class Wall():
