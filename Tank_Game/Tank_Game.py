@@ -1,3 +1,4 @@
+from operator import truth
 import turtle
 import pygame
 import os 
@@ -7,7 +8,7 @@ import random
 
 os.chdir(sys.path[0])
 
-SCREEN_WIDTH = 700
+SCREEN_WIDTH = 750
 SCREEN_HEIGHT = 500
 BG_COLOR = pygame.Color(0, 0, 0)
 TEXT_COLOR = pygame.Color(255, 0, 0)
@@ -26,12 +27,14 @@ class MainGame():
         self.enemy_tank_list = []
         self.my_bullet_list = []
         self.enemy_bullet_list = []
+        self.wall_list = []
 
     def start_game(self):
         pygame.display.init()
         self.window = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
         self.create_my_tank()
         self.create_enemy_tank()
+        self.create_wall(6)
         pygame.display.set_caption('Tank Game')
         while True:
             time.sleep(0.02)
@@ -40,6 +43,7 @@ class MainGame():
             if self.my_tank and self.my_tank.alive:
                 self.my_tank.display_tank(self.window)
             else:
+                self.move_keys = 0
                 del self.my_tank
                 self.my_tank = None 
             self.get_event()
@@ -47,6 +51,7 @@ class MainGame():
                 if not self.my_tank.stop:    
                     self.my_tank.move()
             self.blit_all_enemy_tank()
+            self.blit_wall()
             self.blit_my_bullet()
             self.blit_enemy_bullet()
             self.blit_explode()
@@ -112,6 +117,16 @@ class MainGame():
                     if not self.move_keys:    
                         self.my_tank.stop = True
     
+    def blit_wall(self):
+        for wall in self.wall_list:
+            wall.display_wall(self.window)
+
+    def create_wall(self, wall_num):
+        for i in range(wall_num):
+            wall = Wall(i*130, 220)
+            self.wall_list.append(wall)
+
+
     def create_my_tank(self):
         self.my_tank = Tank(350, 250)
 
@@ -336,11 +351,16 @@ class Bullet(BaseItem):
 
 
 class Wall():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, left, top) -> None:
+        self.image = pygame.image.load('img/brick.png')
+        self.rect = self.image.get_rect()
+        self.rect.left = left 
+        self.rect.top = top
+        self.alive = True 
+        self.hp = 1
 
-    def display_wall(self):
-        pass
+    def display_wall(self, window):
+        window.blit(self.image, self.rect)
 
 class Explode():
     def __init__(self, tank, window):
