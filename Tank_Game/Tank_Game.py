@@ -21,13 +21,13 @@ class BaseItem(pygame.sprite.Sprite):
 class MainGame():
     ENEMYTANK_NUMS = 5
     explode_list = []
+    wall_list = []
 
     def __init__(self):
         self.move_keys = 0
         self.enemy_tank_list = []
         self.my_bullet_list = []
         self.enemy_bullet_list = []
-        self.wall_list = []
 
     def start_game(self):
         pygame.display.init()
@@ -119,7 +119,10 @@ class MainGame():
     
     def blit_wall(self):
         for wall in self.wall_list:
-            wall.display_wall(self.window)
+            if wall.alive:
+                wall.display_wall(self.window)
+            else:
+                self.wall_list.remove(wall)
 
     def create_wall(self, wall_num):
         for i in range(wall_num):
@@ -154,6 +157,7 @@ class MainGame():
                 my_bullet.display_bullet(self.window)
                 my_bullet.move()
                 my_bullet.hit_enemy_tank(self.enemy_tank_list, self.window)
+                my_bullet.hit_wall()
             else:
                 self.my_bullet_list.remove(my_bullet)
     
@@ -163,6 +167,7 @@ class MainGame():
                 enemy_bullet.display_bullet(self.window)
                 enemy_bullet.move()
                 enemy_bullet.hit_my_tank(self.my_tank, self.window)
+                enemy_bullet.hit_wall()
             else:
                 self.enemy_bullet_list.remove(enemy_bullet)
     
@@ -348,7 +353,14 @@ class Bullet(BaseItem):
                     my_tank.alive = False
                     self.alive = False
                     MainGame.explode_list.append(Explode(my_tank, window))
-
+    
+    def hit_wall(self):
+        for wall in MainGame.wall_list:
+            if pygame.sprite.collide_rect(self, wall):
+                self.alive = False 
+                wall.hp -= 1
+                if wall.hp <= 0:
+                    wall.alive = False
 
 class Wall():
     def __init__(self, left, top) -> None:
@@ -357,7 +369,7 @@ class Wall():
         self.rect.left = left 
         self.rect.top = top
         self.alive = True 
-        self.hp = 1
+        self.hp = 2
 
     def display_wall(self, window):
         window.blit(self.image, self.rect)
