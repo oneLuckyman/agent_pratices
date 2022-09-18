@@ -1,4 +1,5 @@
 from operator import truth
+from re import M
 import turtle
 import pygame
 import os 
@@ -50,6 +51,7 @@ class MainGame():
             if self.my_tank and self.my_tank.alive:
                 if not self.my_tank.stop:    
                     self.my_tank.move()
+                    self.my_tank.hit_wall()
             self.blit_all_enemy_tank()
             self.blit_wall()
             self.blit_my_bullet()
@@ -145,6 +147,7 @@ class MainGame():
             if enemy_tank.alive:
                 enemy_tank.display_tank(self.window)
                 enemy_tank.random_move()
+                enemy_tank.hit_wall()
                 enemy_bullet = enemy_tank.shot()
                 if enemy_bullet:
                     self.enemy_bullet_list.append(enemy_bullet)
@@ -196,9 +199,22 @@ class Tank(BaseItem):
         self.rect.top = top
         self.speed = TANK_SPEED
         self.stop = True
+        self.old_left = self.rect.left 
+        self.old_top = self.rect.top 
 
+    def stay(self):
+        self.rect.left = self.old_left 
+        self.rect.top = self.old_top
+
+    def hit_wall(self):
+        for wall in MainGame.wall_list:
+            if pygame.sprite.collide_rect(self, wall):
+                self.stay()
 
     def move(self):
+        self.old_left = self.rect.left 
+        self.old_top = self.rect.top 
+
         if self.direction == 'L':
             if self.rect.left > 0:
                 if (self.rect.left - self.speed) < 0:
