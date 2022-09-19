@@ -1,6 +1,3 @@
-from operator import truth
-from re import M
-import turtle
 import pygame
 import os 
 import sys 
@@ -23,16 +20,16 @@ class MainGame():
     ENEMYTANK_NUMS = 5
     explode_list = []
     wall_list = []
+    enemy_tank_list = []
+    window = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
     def __init__(self):
         self.move_keys = 0
-        self.enemy_tank_list = []
         self.my_bullet_list = []
         self.enemy_bullet_list = []
 
     def start_game(self):
         pygame.display.init()
-        self.window = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
         self.create_my_tank()
         self.create_enemy_tank()
         self.create_wall(6)
@@ -42,7 +39,7 @@ class MainGame():
             self.window.fill(BG_COLOR)
             self.window.blit(self.Get_Text_Surface('Number of remaining enemies: %d' %len(self.enemy_tank_list)), (10, 10))
             if self.my_tank and self.my_tank.alive:
-                self.my_tank.display_tank(self.window)
+                self.my_tank.display_tank()
             else:
                 self.move_keys = 0
                 del self.my_tank
@@ -52,6 +49,7 @@ class MainGame():
                 if not self.my_tank.stop:    
                     self.my_tank.move()
                     self.my_tank.hit_wall()
+                    self.my_tank.collide_enemy_tank()
             self.blit_all_enemy_tank()
             self.blit_wall()
             self.blit_my_bullet()
@@ -133,7 +131,7 @@ class MainGame():
 
 
     def create_my_tank(self):
-        self.my_tank = Tank(350, 250)
+        self.my_tank = MyTank(350, 250)
 
     def create_enemy_tank(self):
         top = 100
@@ -145,9 +143,11 @@ class MainGame():
     def blit_all_enemy_tank(self):
         for enemy_tank in self.enemy_tank_list:
             if enemy_tank.alive:
-                enemy_tank.display_tank(self.window)
+                enemy_tank.display_tank()
                 enemy_tank.random_move()
                 enemy_tank.hit_wall()
+                if self.my_tank and self.my_tank.alive:
+                    enemy_tank.collide_my_tank(self.my_tank)
                 enemy_bullet = enemy_tank.shot()
                 if enemy_bullet:
                     self.enemy_bullet_list.append(enemy_bullet)
@@ -245,16 +245,23 @@ class Tank(BaseItem):
         if num < 50:
             return Bullet(self)
 
-    def display_tank(self, window):
+    def display_tank(self):
         self.image = self.images[self.direction]
-        window.blit(self.image, self.rect)
+        MainGame.window.blit(self.image, self.rect)
 
 class MyTank(Tank):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, left, top) -> None:
+        super(MyTank, self).__init__(left, top)
+    
+    def collide_enemy_tank(self):
+        for enemy in MainGame.enemy_tank_list:
+            if pygame.sprite.collide_rect(self, enemy):
+                self.stay()
 
 class EnemyTank(Tank):
     def __init__(self, left, top, speed) -> None:
+        super(EnemyTank, self).__init__(left, top)
+
         self.images = {
             'U':pygame.image.load('img/enemy1_U.png'),
             'D':pygame.image.load('img/enemy1_D.png'),
@@ -292,7 +299,10 @@ class EnemyTank(Tank):
         else:
             self.move()
             self.steps -= self.speed
-
+    
+    def collide_my_tank(self, my_tank):
+        if pygame.sprite.collide_rect(self, my_tank):
+            self.stay()
 
 class Bullet(BaseItem):
     def __init__(self, tank: Tank) -> None:
