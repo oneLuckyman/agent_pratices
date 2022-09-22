@@ -108,6 +108,8 @@ class MainGame():
                         if len(self.my_bullet_list) <= 3:
                             my_bullet = Bullet(self.my_tank)
                             self.my_bullet_list.append(my_bullet)
+                            fire_music = Music('music/fire.wav')
+                            fire_music.play()
                             print('Fire!')
                         else:
                             print('Too many bullets!')
@@ -132,6 +134,8 @@ class MainGame():
 
     def create_my_tank(self):
         self.my_tank = MyTank(350, 250)
+        music = Music('music/add.wav')
+        music.play()
 
     def create_enemy_tank(self):
         top = 100
@@ -424,11 +428,13 @@ class Explode():
 
 
 class Music():
-    def __init__(self) -> None:
-        pass
+    def __init__(self, fn) -> None:
+        self.filename = fn 
+        pygame.mixer.init()
+        pygame.mixer.music.load(self.filename)
 
     def play(self):
-        pass
+        pygame.mixer.music.play()
 
 if __name__ == '__main__':
     MainGame().start_game()
